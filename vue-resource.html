@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>imoocmall</title>
+    <script src="node_modules/vue/dist/vue.js"></script>
+    <script src="node_modules/vue-resource/dist/vue-resource.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <h1>vue-resource插件讲解</h1>
+      <a href="#" v-on:click="get">get request</a>
+      <a href="#">post request</a>
+      <a href="#">jsonp request</a>
+    </div>
+    <script type="text/javascript">
+      new Vue({
+        el:"#app",
+        data:{
+          msg:''
+        },
+        methods:{
+          get:function(){
+            this.$http.get("package.json",{
+              params:{
+                userId:"101"
+              },
+              headers:{
+                token:"abcd"
+              }
+            }).then(res=>{
+              this.msg = res.data;
+              console.log(this.msg);
+            }, error=>{
+              this.msg = error;
+            });
+          },
+          post:function(){
+            this.$http.post("package.json",{
+              params:{
+                userId:"101"
+              },
+              headers:{
+                access_token:"abcd"
+              }
+            }).then(res=>{
+              this.msg = res.data;
+              console.log(this.msg);
+            }, error=>{
+              this.msg = error;
+            });
+          },
+          
+        }
+      });
+    </script>
+  </body>
+</html>
