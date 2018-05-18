@@ -8,9 +8,12 @@
         <div class="container">
             <div class="filter-nav"><span class="sortby">Sort by:</span> <a href="javascript:void(0)" class="default cur">Default</a>
                 <a href="javascript:void(0)" class="price sort-up" @click="sortProduct">Price
-                    <svg class="icon icon-arrow-short">
+                    <span class="sort-icon" v-bind:class="{'sort-icon-up':!pageParams.sort}">
+                      <svg class="icon icon-arrow-short">
                         <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-arrow-short"></use>
-                    </svg>
+                      </svg>
+                    </span>
+
                 </a> <a href="javascript:void(0)" class="filterby stopPop" @click="showFilterPop">Filter by</a></div>
             <div class="accessory-result">
                 <div id="filter" class="filter stopPop" v-bind:class="{'filterby-show':filterBy}">
@@ -46,6 +49,26 @@
         </div>
     </div>
     <div class="md-overlay" @click="closePop" v-show="overLayFlag"></div>
+    <modal v-bind:mdShow="mdShowCart" v-on:close="closeModal">
+      <p slot="message">
+        <svg class="icon-status-ok">
+          <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-status-ok"></use>
+        </svg>
+        <span>加入购物车成!</span>
+      </p>
+      <div slot="btnGroup">
+        <a href="javascript:;" class="btn btn--m" @click="mdShowCart = false">继续购物</a>
+        <router-link class="btn btn--m btn--red" to="/cart">查看购物车</router-link>
+      </div>
+    </modal>
+    <modal v-bind:mdShow="mdCartError" v-on:close="closeModal">
+      <p slot="message">
+        <span v-text="mdCartErrorText"></span>
+      </p>
+      <div slot="btnGroup">
+        <a class="btn btn--m" href="javascript:;" @click="mdCartError = false">关闭</a>
+      </div>
+    </modal>
     <nav-footer></nav-footer>
   </div>
 </template>
@@ -54,6 +77,18 @@
     text-align: center;
     padding:20px 0;
   }
+  .sort-icon-up{
+    transform:rotate(180deg);
+    transition:all .3s ease-out;
+  }
+  .sort-icon{
+    display:inline-block;
+    transition:all .3s ease-out;
+  }
+  .btn:hover{
+    background-color:#ffe5e6;
+    transition:all .3s ease-out;
+  }
 </style>
 <script>
   import './../assets/css/base.css';
@@ -61,6 +96,7 @@
   import NavHeader from '@/components/NavHeader.vue';
   import NavBread from '@/components/NavBread.vue'
   import NavFooter from '@/components/NavFooter.vue';
+  import Modal from '@/components/Modal.vue';
   import axios from 'axios';
   import fetch from 'cross-fetch';
   import * as utils from '../utils';
@@ -68,7 +104,7 @@
     name: 'Goodslist',
     data () {
       return {
-        goodsList: [],
+        goodsList: [], //商品列表数据
         priceFilter:[
           {
             startPrice:'0.00',
@@ -83,16 +119,19 @@
             endPrice:'2000.00'
           }
         ],
-        priceChecked:'all',
+        priceChecked:'all',//当前哪个价格区间被选中
         filterBy:false,
         overLayFlag:false,
         pageParams:{
           page:1,
           pageSize:4,
-          sort:true
+          sort:true //排序:升序,降序
         },
-        busy:true,
-        isLoading:false
+        busy:true,//滚动回调是否生效
+        isLoading:false, //是否显示加载中
+        mdShowCart:false, //加入购物车成功弹框控制
+        mdCartError:false, //加入购物车失败弹框
+        mdCartErrorText:null //接口报错弹框
       }
     },
     mounted() {
@@ -164,19 +203,39 @@
         },1000);
       },
       addCart(productId){
+        const self = this;
         axios.get("/goods/addCart", {params: {productId:productId}}).then(function(res){
           if (res.data.status == 0) {
-            alert("加入成功");
+//            alert("加入成功");
+
+//            let modalCompon = null;
+//            for(let i = 0; i<self.$children.length; i++){
+//              const id = self.$children[i].$el.id;
+//              if(id === 'modal'){
+//                modalCompon = self.$children[2];
+//                break;
+//              }
+//            }
+//            modalCompon.operateModal(true);
+
+            self.mdShowCart = true;
           } else {
-            alert(res.data.msg);
+//            alert(res.data.msg);
+            self.mdCartErrorText = res.data.msg;
+            self.mdCartError = true;
           }
         });
+      },
+      closeModal(){
+        this.mdShowCart = false;
+        this.mdCartError = false;
       }
     },
     components:{
       NavHeader,
       NavFooter,
-      NavBread
+      NavBread,
+      Modal
     }
   }
 </script>
