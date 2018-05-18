@@ -11,6 +11,7 @@ var express = require('express')
 var webpack = require('webpack')
 var proxyMiddleware = require('http-proxy-middleware')
 var webpackConfig = require('./webpack.dev.conf')
+var cookieParser = require('cookie-parser');
 
 // default port where dev server listens for incoming traffic
 var port = process.env.PORT || config.dev.port
@@ -21,6 +22,25 @@ var autoOpenBrowser = !!config.dev.autoOpenBrowser
 var proxyTable = config.dev.proxyTable
 
 var app = express();
+app.use(cookieParser());
+//登录拦截
+app.use(function(req,res,next){
+  if(req.cookies && req.cookies.userId){
+    next();
+  }else{
+    console.log("pathUrl:"+req.path);
+    if(req.path.indexOf('/static') > -1 || req.path == '/__webpack_hmr' || req.path == '/app.js' || req.path == '/' || req.path == '/users/login' || req.path=='/users/logout' || req.originalUrl.indexOf('/goods/list')>-1){
+      next();
+    }else{
+      res.json({
+        status:'10001',
+        msg:'当前未登录',
+        result:''
+      });
+    }
+  }
+});
+
 var router = express.Router();
 
 //var goodsData = require('./../mock/goods.json');
@@ -48,7 +68,8 @@ mongoose.connection.on("disconnected", function(){
   console.log("MongoDB connected disconnected");
 });
 
-router.get("/goods", function(req,res,next){
+// 查询商品列表
+router.get("/goods/list", function(req,res,next){
   let page = parseInt(req.param("page"));
   let pageSize = parseInt(req.param("pageSize"));
   let sort = req.param("sort");
@@ -84,6 +105,148 @@ router.get("/goods", function(req,res,next){
       });
     }
   });
+});
+
+//加入到购物车
+var User = require('../server/models/user');
+router.get("/goods/addCart", function(req, res, next){
+  var userId = '100000001';
+  var productId = req.param('productId');
+  User.findOne({userId:userId}, function(err, userDoc){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message
+      });
+    } else {
+      console.log("userDoc:"+userDoc);
+      if(userDoc){
+        let goodsItem = null;
+        userDoc.cartList.forEach(function(item){
+          if(item.productId == productId){
+            goodsItem = item;
+            item.productNum ++;
+          }
+        });
+        if (goodsItem) {
+          userDoc.save(function(err2, doc2){
+            if(err2){
+              res2.json({
+                status:"1",
+                msg:err.message
+              });
+            }else{
+              res.json({
+                status:'0',
+                msg:'',
+                result:'successfully'
+              });
+            }
+          });
+        } else {
+          Goods.findOne({productId:productId},function(err,doc){
+            if(err){
+              res.json({
+                status:"1",
+                msg:err.message
+              });
+            }else{
+              if(doc){
+                doc.productNum = 1;
+                doc.checked = 1;
+                userDoc.cartList.push(doc);
+                userDoc.save(function(err2, doc2){
+                  if(err2){
+                    res2.json({
+                      status:"1",
+                      msg:err.message
+                    });
+                  }else{
+                    res.json({
+                      status:'0',
+                      msg:'',
+                      result:'successfully'
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+
+      }
+    }
+  });
+});
+
+//登陆接口
+var User = require('../server/models/user');
+router.get('/users/login', function(req,res,next){
+  var param = {
+    userName:req.param("userName"),
+    userPwd:req.param("userPwd")
+  };
+  User.findOne(param,function(err,doc){
+    if(err){
+      res.json({
+        satus:"1",
+        msg:err.message
+      });
+    }else{
+      if(doc){
+        res.cookie("userId",doc.userId,{
+          path:'/',
+          maxAge:1000*3600
+        });
+        res.cookie("userName",doc.userName,{
+          path:'/',
+          maxAge:1000*3600
+        });
+        //req.session.user = doc;
+        res.json({
+          status:'0',
+          msg:'',
+          result:{
+            userName:doc.userName
+          }
+        });
+      }
+    }
+  });
+});
+
+//登出接口
+router.get("/users/logout",function(req,res,next){
+  res.cookie("userId","",{
+    path:"/",
+    maxAge:-1
+  });
+  res.cookie("userName","",{
+    path:"/",
+    maxAge:-1
+  });
+  res.json({
+    status:"0",
+    msg:"",
+    result:''
+  });
+});
+
+//检查是否登录
+router.get("/users/checkLogin",function(req,res,next){
+  if(req.cookies && req.cookies.userId){
+    res.json({
+      status:'0',
+      msg:'',
+      result:req.cookies.userName || ''
+    });
+  } else {
+    res.json({
+      status:'1',
+      msg:'未登录',
+      result:''
+    });
+  }
 });
 /*
  * 以上代码/goods路由的实现copy sever 中的路由,因跨域问题 end

@@ -28,7 +28,10 @@
       <div class="navbar">
           <div class="navbar-left-container"><a href="/"><img src="/static/logo.png" class="navbar-brand-logo"></a></div>
           <div class="navbar-right-container" style="display: flex;">
-              <div class="navbar-menu-container"><!----> <a href="javascript:void(0)" class="navbar-link">Login</a>
+              <div class="navbar-menu-container">
+                <span v-text="nickName" v-if="nickName"></span>
+                <a href="javascript:void(0)" class="navbar-link" @click="showModal(true)" v-if="!nickName">Login</a>
+                <a href="javascript:void(0)" class="navbar-link" v-if="nickName" @click="logOut">Login Out</a>
 
                   <div class="navbar-cart-container"><!----> <a href="/#/cart" class="navbar-link navbar-cart-link">
                       <svg class="navbar-cart-logo">
@@ -38,33 +41,110 @@
               </div>
           </div>
       </div>
-      <div class="md-modal modal-msg md-modal-transition">
+      <div class="md-modal modal-msg md-modal-transition" v-bind:class="{'md-show':loginModalFlag}">
           <div class="md-modal-inner">
               <div class="md-top">
                   <div class="md-title">Login in</div>
-                  <button class="md-close">Close</button>
+                  <button class="md-close" @click="showModal(false)">Close</button>
               </div>
               <div class="md-content">
                   <div class="confirm-tips">
-                      <div class="error-wrap"><span class="error error-show" style="display: none;">用户名或者密码错误</span></div>
+                      <div class="error-wrap"><span class="error error-show" v-show="errorTip">用户名或者密码错误</span></div>
                       <ul>
-                          <li class="regi_form_input"><i class="icon IconPeople"></i> <input type="text" tabindex="1"
-                                                                                             name="loginname"
-                                                                                             placeholder="User Name"
-                                                                                             data-type="loginname"
-                                                                                             class="regi_login_input regi_login_input_left">
+                          <li class="regi_form_input">
+                            <i class="icon IconPeople"></i>
+                            <input
+                              type="text"
+                              tabindex="1"
+                              name="loginname"
+                              placeholder="User Name"
+                              data-type="loginname"
+                              class="regi_login_input regi_login_input_left"
+                              v-model="userName"
+                            />
                           </li>
-                          <li class="regi_form_input noMargin"><i class="icon IconPwd"></i> <input type="password"
-                                                                                                   tabindex="2"
-                                                                                                   name="password"
-                                                                                                   placeholder="Password"
-                                                                                                   class="regi_login_input regi_login_input_left login-input-no input_text">
+                          <li class="regi_form_input noMargin">
+                            <i class="icon IconPwd"></i>
+                            <input
+                              type="password"
+                              tabindex="2"
+                              name="password"
+                              placeholder="Password"
+                              class="regi_login_input regi_login_input_left login-input-no input_text"
+                              v-model="userPwd"
+                            />
                           </li>
                       </ul>
                   </div>
-                  <div class="login-wrap"><a href="javascript:;" class="btn-login">登 录</a></div>
+                  <div class="login-wrap"><a href="javascript:;" class="btn-login" @click="login">登 录</a></div>
               </div>
-          </div>
-      </div>
-      <!----></header>
+            </div>
+        </div>
+        <div class="md-overlay" v-if="loginModalFlag"></div>
+      </header>
 </template>
+<script>
+  import './../assets/css/login.css';
+  import axios from 'axios';
+  export default{
+    data(){
+      return{
+        userName:'',
+        userPwd:'',
+        errorTip:false,
+        loginModalFlag:false,
+        nickName:''
+      }
+    },
+    mounted(){
+      this.checkLogin();
+    },
+    methods:{
+      login(){
+        const self = this;
+        if(!this.userName || !this.userPwd){
+          this.errorTip = true;
+          return;
+        }
+        const param = {
+          userName: this.userName,
+          userPwd:this.userPwd
+        };
+        axios.get('/users/login',{params:param}).then(function(res){
+          const content = res.data;
+          if(content.status == "0"){
+            self.errorTip = false;
+            self.loginModalFlag = false;
+            self.nickName = content.result.userName;
+          } else {
+            self.errorTip = true;
+            alert(content.msg);
+          }
+        });
+      },
+      showModal(flag){
+        this.loginModalFlag = flag;
+      },
+      logOut(){
+        const self = this;
+        axios.get('users/logout').then(function(res){
+          const content = res.data;
+          if(content.status == "0"){
+            self.nickName = '';
+          }
+        });
+      },
+      checkLogin(){
+        const self = this;
+        axios.get('/users/checkLogin').then(function(res){
+          const content = res.data;
+          if(content.status == "0"){
+            self.nickName = content.result;
+          } else {
+            self.nickName = '';
+          }
+        });
+      }
+    }
+  }
+</script>

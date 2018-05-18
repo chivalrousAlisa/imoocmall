@@ -30,7 +30,7 @@
                                 <div class="main">
                                     <div class="name">{{ item.productName }}</div>
                                     <div class="price">{{ item.productPrice }}</div>
-                                    <div class="btn-area"><a href="javascript:;" class="btn btn--m">加入购物车</a></div>
+                                    <div class="btn-area"><a href="javascript:;" class="btn btn--m" @click="addCart(item.productId)">加入购物车</a></div>
                                 </div>
                             </li>
                         </ul>
@@ -112,7 +112,7 @@
           param.priceLte = this.priceFilter[this.priceChecked].endPrice;
         }
         this.isLoading = true;
-        axios.get("/goods", {
+        axios.get("/goods/list", {
           params: param
         }).then(function(res){
           self.isLoading = false;
@@ -162,6 +162,15 @@
           self.pageParams.page ++;
           self.getGoodsList(true);
         },1000);
+      },
+      addCart(productId){
+        axios.get("/goods/addCart", {params: {productId:productId}}).then(function(res){
+          if (res.data.status == 0) {
+            alert("加入成功");
+          } else {
+            alert(res.data.msg);
+          }
+        });
       }
     },
     components:{
