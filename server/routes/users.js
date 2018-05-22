@@ -76,4 +76,55 @@ router.get("/checkLogin",function(req,res,next){
   }
 });
 
+// 查询我的购物车接口
+router.get("/cartList",function(req,res,next){
+  var userId = req.cookies.userId;
+  User.findOne({userId:userId},function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err.message,
+        result:''
+      });
+    }else{
+      if(doc){
+        res.json({
+          status:'0',
+          msg:'',
+          result:doc.cartList
+        });
+      }
+    }
+  });
+});
+
+// 删除购物车商品接口
+router.get("/cartDel",function(req,res,next){
+  var productId = req.param("productId");
+  var userId = req.cookies.userId;
+  User.update({
+    userId:userId
+  },{
+    $pull:{
+      'cartList':{
+        'productId':productId
+      }
+    }
+  },function(err,doc){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message,
+        result:''
+      });
+    }else{
+      res.json({
+        status:'0',
+        msg:'',
+        result:"successfully"
+      });
+    }
+  });
+});
+
 module.exports = router;

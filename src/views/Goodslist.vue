@@ -58,7 +58,7 @@
       </p>
       <div slot="btnGroup">
         <a href="javascript:;" class="btn btn--m" @click="mdShowCart = false">继续购物</a>
-        <router-link class="btn btn--m btn--red" to="/cart">查看购物车</router-link>
+        <router-link class="btn btn--m btn--red" to="/carts">查看购物车</router-link>
       </div>
     </modal>
     <modal v-bind:mdShow="mdCartError" v-on:close="closeModal">
