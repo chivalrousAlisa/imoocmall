@@ -24,7 +24,7 @@
               <li v-for="item in cartList">
                 <div class="cart-tab-1">
                   <div class="cart-item-check">
-                    <a href="javascipt:;" class="checkbox-btn item-check-btn">
+                    <a href="javascipt:;" class="checkbox-btn item-check-btn" v-bind:class="{check:item.checked == '1'}" @click="editCart('check',item)">
                       <svg class="icon icon-ok">
                         <use xlink:href="#icon-ok"></use>
                       </svg>
@@ -44,9 +44,9 @@
                   <div class="item-quantity">
                     <div class="select-self select-self-open">
                       <div class="select-self-area">
-                        <a class="input-sub">-</a>
+                        <a class="input-sub" @click="editCart('min',item)">-</a>
                         <span class="select-ipt">{{item.productNum}}</span>
-                        <a class="input-add">+</a>
+                        <a class="input-add" @click="editCart('add',item)">+</a>
                       </div>
                     </div>
                   </div>
@@ -68,9 +68,9 @@
         <div class="cart-foot-wrap">
           <div class="cart-foot-inner">
             <div class="cart-foot-l">
-              <div class="item-all-check">
+              <div class="item-all-check" @click="toggleCheckedAll">
                 <a href="javascipt:;">
-                  <span class="checkbox-btn item-check-btn">
+                  <span class="checkbox-btn item-check-btn" v-bind:class="{'check':isCheckedAll}">
                       <svg class="icon icon-ok"><use xlink:href="#icon-ok"/></svg>
                   </span>
                   <span>Select all</span>
@@ -79,7 +79,7 @@
             </div>
             <div class="cart-foot-r">
               <div class="item-total">
-                Item total: <span class="total-price">购物车总金额</span>
+                Item total: <span class="total-price">{{totalPrice}}</span>
               </div>
               <div class="btn-wrap">
                 <a class="btn btn--red">Checkout</a>
@@ -106,7 +106,7 @@
   import NavBread from './../components/NavBread';
   import Modal from './../components/Modal';
   import axios from 'axios';
-
+  import { currency } from './../utils';
   export default {
     name: 'Carts',
     data () {
@@ -118,6 +118,32 @@
     },
     mounted(){
       this.init();
+    },
+    computed:{
+      isCheckedAll(){
+        return this.checkedCount == this.cartList.length;
+      },
+      checkedCount(){
+        let count = 0;
+        this.cartList.forEach(function(item){
+          if(item.checked == "1"){
+            count++;
+          }
+        });
+        return count;
+      },
+      totalPrice(){
+        let totalAmount = 0
+        this.cartList.forEach(function(item){
+          if(item.checked == "1"){
+            totalAmount += parseFloat(item.productPrice)*parseFloat(item.productNum);
+          }
+        });
+        return totalAmount.toFixed(2);
+      }
+    },
+    filters:{
+      currency:currency
     },
     methods:{
       init(){
@@ -139,6 +165,39 @@
             self.delModal = false;
             self.init();
           }
+        });
+      },
+      editCart(flag, item){
+        const self = this;
+        if(flag === 'min'){
+          if(item.productNum <= 1){
+            return;
+          }
+          item.productNum--;
+        }else if(flag ==='add'){
+          item.productNum++;
+        }else if(flag === 'check'){
+          item.checked = (item.checked == "1" ? '0' : 1);
+        }
+        axios.get('users/cartEdit',{
+          params:{
+            productId:item.productId,
+            productNum:item.productNum,
+            checked:item.checked
+          }
+        }).then(function(res){
+          const data = res.data;
+        });
+      },
+      toggleCheckedAll(){
+        let flag = !this.isCheckedAll;
+        this.cartList.forEach(function(item){
+          item.checked = (flag ? 1 :0);
+        });
+        axios.get("/users/editCheckAll",{
+          params:{checkAll:flag ? 1 : 0}
+        }).then(function(res){
+
         });
       }
     },

@@ -299,6 +299,68 @@ router.get("/users/cartDel",function(req,res,next){
     }
   });
 });
+
+//修改购物车商品接口
+router.get("/users/cartEdit",function(req,res,next){
+  var productId = req.param("productId");
+  var productNum = req.param("productNum");
+  var checked = req.param("checked");
+  var userId = req.cookies.userId;
+  User.update({"userId":userId,"cartList.productId":productId},{
+    "cartList.$.productNum":productNum,
+    "cartList.$.checked":checked,
+  },function(err,doc){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message,
+        result:''
+      });
+    }else{
+      res.json({
+        status:"0",
+        msg:'',
+        result:'suc'
+      });
+    }
+  });
+});
+
+//购物车全选切换接口
+router.get("/users/editCheckAll",function(req,res,next){
+  var checkAll = req.param("checkAll");
+  var userId = req.cookies.userId;
+  User.findOne({userId:userId},function(err,user){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message,
+        result:''
+      });
+    }else{
+      if(user){
+        user.cartList.forEach((item) => {
+          item.checked = checkAll;
+        });
+        user.save(function(err1,doc){
+          if(err1){
+            res.json({
+              status:"1",
+              msg:err1.message,
+              result:""
+            });
+          }else{
+            res.json({
+              status:"0",
+              msg:"",
+              result:"suc"
+            });
+          }
+        });
+      }
+    }
+  });
+});
 /*
  * 以上代码/goods路由的实现copy sever 中的路由,因跨域问题 end
  */
