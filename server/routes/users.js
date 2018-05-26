@@ -189,4 +189,164 @@ router.get("/editCheckAll",function(req,res,next){
   });
 });
 
+// 查询用户地址列表
+router.get("/getAddressList",function(req,res,next){
+  var userId = req.cookies.userId;
+  User.findOne({"userId":userId},function(err,doc){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message,
+        result:""
+      });
+    }else{
+      if(doc){
+        res.json({
+          status:'0',
+          msg:'',
+          result:doc.addressList
+        });
+      }
+    }
+  });
+});
+
+//新增地址接口
+router.post("/addNewAddress",function(req,res,next){
+  var userId = req.cookies.userId;
+  var addressVo = req.body.addressVo;
+  //var addressVo = {"userName":"alisa","streetName":"盛世嘉园","postCode":"8009","tel":"15937626736","isDefault":true};
+  if(!addressVo){
+    res.json({
+      status:'1003',
+      msg:"addressVo is null",
+      result:''
+    });
+    return;
+  }
+  User.findOne({"userId":userId},function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err.message,
+        resulut:''
+      });
+    }else{
+      if(doc){
+        var newId = "100001";
+        if(doc.addressList.length){
+          newId = Number(doc.addressList[doc.addressList.length-1].addressId) + 1;
+        }
+        addressVo.addressId = String(newId);
+
+        if(addressVo.isDefault){
+          doc.addressList.forEach(function(item){
+            item.isDefault = false;
+          });
+        }
+
+        doc.addressList.push(addressVo);
+        doc.save(function(err1,doc1){
+          if(err1){
+            res.json({
+              status:"1",
+              msg:err1.message,
+              result:''
+            });
+          }else{
+            res.json({
+              status:'0',
+              msg:"successful",
+              result:doc1.addressList
+            });
+          }
+        });
+      }
+    }
+  });
+});
+
+//设置默认地址接口
+router.post("/setDefaultAddress",function(req,res,next){
+  var userId = req.cookies.userId;
+  var addressId = req.body.addressId;
+  if(!addressId){
+    res.json({
+      status:'1003',
+      msg:'addressId is a null',
+      result:''
+    });
+    return;
+  }
+  User.findOne({"userId":userId},function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err,message,
+        result:''
+      });
+    }else{
+      if(doc){
+        doc.addressList.forEach(function(item){
+          if(item.addressId == addressId){
+            item.isDefault = true;
+          }else{
+            item.isDefault = false;
+          }
+        });
+        doc.save(function(err,doc){
+          if(err){
+            res.json({
+              status:'1',
+              msg:err,message,
+              result:''
+            });
+          }else{
+            res.json({
+              status:'0',
+              msg:'successful',
+              result:doc.addressList
+            });
+          }
+        });
+      }
+    }
+  });
+});
+
+//删除地址
+router.post("/delAddress",function(req,res,next){
+  var userId = req.cookies.userId;
+  var addressId = req.body.addressId;
+  if(!addressId){
+    res.json({
+      status:'1003',
+      msg:'addressId is a null',
+      result:''
+    });
+    return;
+  }
+  User.update({"userId":userId},{
+    $pull:{
+      'addressList':{
+        'addressId':addressId
+      }
+    }
+  },function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err,message,
+        result:''
+      });
+    }else{
+      res.json({
+        status:'0',
+        msg:'successful',
+        result:doc.addressList
+      });
+    }
+  });
+});
+
 module.exports = router;
