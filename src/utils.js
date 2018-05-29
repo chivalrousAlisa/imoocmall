@@ -1,6 +1,7 @@
 export const deepCopy = function(obj){
   return JSON.parse(JSON.stringify(obj));
 };
+const digitsRE = /(\d{3})(?=\d)/g;
 export const currency = function(value, currency, decimals){
   value = parseFloat(value)
   if (!isFinite(value) || (!value && value !== 0)) return ''

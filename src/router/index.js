@@ -5,6 +5,7 @@ import Title from '@/views/Title';
 import Image from '@/views/Image';
 import Carts from '@/views/Carts';
 import Address from '@/views/Address';
+import OrderConfirm from '@/views/OrderConfirm';
 
 Vue.use(Router);
 
@@ -39,6 +40,11 @@ export default new Router({
       path:'/address',
       name:'address',
       component: Address
+    },
+    {
+      path:'/orderConfirm',
+      name:'orderConfirm',
+      component: OrderConfirm
     }
   ]
 })

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+require('./../Utils');//扩展Date的format
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -345,6 +346,84 @@ router.post("/delAddress",function(req,res,next){
         msg:'successful',
         result:doc.addressList
       });
+    }
+  });
+});
+
+//提交订单
+router.post("/payMent",function(req,res,next){
+  var userId = req.cookies.userId,
+    addressId = req.body.addressId,
+    orderTotal = req.body.orderTotal;
+  if(!addressId || !orderTotal){
+    res.json({
+      status:"1003",
+      msg:'param is a null',
+      result:''
+    });
+    return;
+  }
+  User.findOne({ userId: userId },function(err,doc){
+    if(err){
+      res.json({
+        status:"1",
+        msg:err.message,
+        result:''
+      });
+    } else {
+      if(doc){
+        var address = doc.addressList.filter(function(item){
+          return item.addressId == addressId
+        });
+
+        var goodsList = doc.cartList.filter(function(item){
+          return item.checked == "1"
+        });
+
+        var orderId = '';
+        const platform = '622';
+        var r1 = Math.floor(Math.random()*10);
+        var r2 = Math.floor(Math.random()*10);
+        var isSame = true;
+        do{
+          if(r2 == r1){
+            r2 = Math.floor(Math.random()*10);
+          } else {
+            isSame = false;
+          }
+        }while(isSame);
+        var sysDate = new Date().Format('yyyyMMddhhmmss');
+        orderId = platform+r1+sysDate+r2;
+        var order = {
+          orderId:orderId,
+          orderTotal:orderTotal,
+          addressInfo:address[0],
+          goodsList:goodsList,
+          orderStatus:'1',
+          createDate:new Date().Format('yyyy-MM-dd hh:mm:ss')
+        };
+        doc.orderList.push(order);
+        doc.save(function(err1,doc1){
+          if(err1){
+            res.json({
+              status:"1",
+              msg:err1.message,
+              result:''
+            });
+          } else {
+            if(doc1){
+              res.json({
+                status:'0',
+                msg:'successful',
+                result:{
+                  orderId:order.orderId,
+                  orderTotal:order.orderTotal
+                }
+              });
+            }
+          }
+        });
+      }
     }
   });
 });
