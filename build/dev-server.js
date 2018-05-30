@@ -640,6 +640,32 @@ router.get("/users/orderDetail",function(req,res,next){
     }
   });
 });
+
+// 获取用户购物车数量
+router.get("/users/getCartsCount",function(req,res,next){
+  var userId = req.cookies.userId
+  User.findOne({ userId }, function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err.message,
+        result:''
+      });
+    } else {
+      if(doc){
+        var cartsCount = 0;
+        doc.cartList.forEach(function(item){
+          cartsCount += Number(item.productNum);
+        });
+        res.json({
+          status:'0',
+          msg:'successful',
+          result:cartsCount
+        });
+      }
+    }
+  });
+});
 /*
  * 以上代码/goods路由的实现copy sever 中的路由,因跨域问题 end
  */

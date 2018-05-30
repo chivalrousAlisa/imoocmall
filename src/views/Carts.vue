@@ -113,7 +113,8 @@
       return {
         cartList:[],
         delModal:false,
-        productId: ''
+        productId: '',
+        currentProduct:{}
       }
     },
     mounted(){
@@ -154,6 +155,7 @@
         });
       },
       onDelete(item){
+        this.currentProduct = item;
         this.productId = item.productId;
         this.delModal = true;
       },
@@ -163,19 +165,25 @@
           const data = res.data;
           if(data.status=='0'){
             self.delModal = false;
+//            const currentCount = self.$store.state.cartCount;
+//            self.$store.commit('updateCartsCount', currentCount - self.currentProduct.productNum);
+            self.reducerCount(-self.currentProduct.productNum);
             self.init();
           }
         });
       },
       editCart(flag, item){
         const self = this;
+        let changedNum = 0;
         if(flag === 'min'){
           if(item.productNum <= 1){
             return;
           }
+          changedNum = -1;
           item.productNum--;
         }else if(flag ==='add'){
           item.productNum++;
+          changedNum = 1
         }else if(flag === 'check'){
           item.checked = (item.checked == "1" ? '0' : 1);
         }
@@ -187,6 +195,9 @@
           }
         }).then(function(res){
           const data = res.data;
+          if(data.status == '0'){
+            self.reducerCount(changedNum);
+          }
         });
       },
       toggleCheckedAll(){
@@ -206,6 +217,10 @@
             path:'/address'
           });
         }
+      },
+      reducerCount(changNum){
+        const currentCount = this.$store.state.cartCount;
+        this.$store.commit('updateCartsCount', currentCount + changNum);
       }
     },
     components:{

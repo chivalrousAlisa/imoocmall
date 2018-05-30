@@ -33,7 +33,9 @@
                 <a href="javascript:void(0)" class="navbar-link" @click="showModal(true)" v-if="!nickName">Login</a>
                 <a href="javascript:void(0)" class="navbar-link" v-if="nickName" @click="logOut">Login Out</a>
 
-                  <div class="navbar-cart-container"><!----> <a href="/#/cart" class="navbar-link navbar-cart-link">
+                  <div class="navbar-cart-container">
+                    <span class="navbar-cart-count" v-text="cartCount" v-if="cartCount"></span>
+                    <a href="/carts" class="navbar-link navbar-cart-link">
                       <svg class="navbar-cart-logo">
                           <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#icon-cart"></use>
                       </svg>
@@ -93,11 +95,29 @@
         userPwd:'',
         errorTip:false,
         loginModalFlag:false,
-        nickName:''
+//        nickName:''
       }
     },
     mounted(){
       this.checkLogin();
+    },
+    computed:{
+      nickName:{
+        get(){
+          return this.$store.state.userName;
+        },
+        set(userName){
+          this.$store.state.userName = userName;
+        }
+      },
+      cartCount:{
+        get(){
+          return this.$store.state.cartCount;
+        },
+        set(cartCount){
+          this.$store.state.cartCount = cartCount;
+        }
+      }
     },
     methods:{
       login(){
@@ -115,7 +135,9 @@
           if(content.status == "0"){
             self.errorTip = false;
             self.loginModalFlag = false;
-            self.nickName = content.result.userName;
+//            self.nickName = content.result.userName;
+            self.$store.commit('updateUserInfo',content.result.userName);
+            self.getCartsCount();
           } else {
             self.errorTip = true;
             alert(content.msg);
@@ -131,6 +153,8 @@
           const content = res.data;
           if(content.status == "0"){
             self.nickName = '';
+            self.$store.commit('updateUserInfo','');
+            self.$store.commit('updateCartsCount',0);
           }
         });
       },
@@ -139,9 +163,21 @@
         axios.get('/users/checkLogin').then(function(res){
           const content = res.data;
           if(content.status == "0"){
-            self.nickName = content.result;
+//            self.nickName = content.result;
+            self.$store.commit('updateUserInfo',content.result);
+            self.getCartsCount();
           } else {
             self.nickName = '';
+            self.$store.commit('updateCartsCount',0);
+          }
+        });
+      },
+      getCartsCount() {
+        const self = this;
+        axios.get("/users/getCartsCount").then(function(res){
+          const data = res.data;
+          if(data.status == '0'){
+            self.$store.commit('updateCartsCount', data.result);
           }
         });
       }
