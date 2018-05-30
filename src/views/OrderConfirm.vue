@@ -119,7 +119,7 @@
 
           <div class="order-foot-wrap">
             <div class="prev-btn-wrap">
-              <button class="btn btn--m">Previous</button>
+              <router-link class="btn btn--m" to="/address">Previous</router-link>
             </div>
             <div class="next-btn-wrap">
               <button class="btn btn--m btn--red" @click="payMent">Proceed to payment</button>

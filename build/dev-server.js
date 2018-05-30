@@ -603,6 +603,43 @@ router.post("/users/payMent",function(req,res,next){
     }
   });
 });
+
+// 查询订单详情
+router.get("/users/orderDetail",function(req,res,next){
+  var userId = req.cookies.userId;
+  var orderId = req.param("orderId");
+  if(!orderId){
+    res.json({
+      status:'1003',
+      msg:'orderId is a null',
+      result:''
+    });
+    return;
+  }
+  User.findOne({ userId }, function(err,doc){
+    if(err){
+      res.json({
+        status:'1',
+        msg:err.message,
+        result:''
+      });
+    } else {
+      if(doc){
+        var orderInfo = {};
+        doc.orderList.forEach(function(item){
+          if(item.orderId == orderId){
+            orderInfo = item;
+          }
+        });
+        res.json({
+          status:'0',
+          msg:'successful',
+          result:orderInfo
+        });
+      }
+    }
+  });
+});
 /*
  * 以上代码/goods路由的实现copy sever 中的路由,因跨域问题 end
  */
