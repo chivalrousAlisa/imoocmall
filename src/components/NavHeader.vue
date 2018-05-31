@@ -140,7 +140,6 @@
             self.getCartsCount();
           } else {
             self.errorTip = true;
-            alert(content.msg);
           }
         });
       },

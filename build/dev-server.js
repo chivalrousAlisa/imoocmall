@@ -214,6 +214,12 @@ router.get('/users/login', function(req,res,next){
             userName:doc.userName
           }
         });
+      } else {
+        res.json({
+          status:'1',
+          msg:'账号或密码错误',
+          result:''
+        });
       }
     }
   });
